@@ -85,14 +85,6 @@ func (c *Config) ParseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
 	return items, nil
 }
 
-func mustReadTestData() []byte {
-	dat, err := ioutil.ReadFile("./sample.html")
-	if err != nil {
-		log.Fatal(err)
-	}
-	return dat
-}
-
 func (c *Config) MustReadWebsiteData() []byte {
 	resp, err := c.Client.PostForm(
 		fmt.Sprintf("%s/%s", c.BaseUrl, "opac-user.pl"),
