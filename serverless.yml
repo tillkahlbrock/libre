@@ -15,5 +15,9 @@ package:
 functions:
   parse:
     handler: bin/parse
+    environment:
+      BASE_URL: ${env:BASE_URL}
+      USERNAME: ${env:USERNAME}
+      PASSWORD: ${env:PASSWORD}
     events:
       - schedule: rate(2 hours)

@@ -2,11 +2,19 @@
 
 build:
 	dep ensure -v
-	env GOOS=linux go build -ldflags="-s -w" -o bin/hello hello/main.go
-	env GOOS=linux go build -ldflags="-s -w" -o bin/world world/main.go
+	env GOOS=linux go build -ldflags="-s -w" -o bin/parse parse/main.go
 
 clean:
 	rm -rf ./bin ./vendor Gopkg.lock
 
-deploy: clean build
+test:
+	go test ./...
+
+deploy: guard-USERNAME guard-PASSWORD guard-BASE_URL clean build test
 	sls deploy --verbose
+
+guard-%:
+	@ if [ "${${*}}" = "" ]; then \
+		echo "Environment variable $* not set"; \
+		exit 1; \
+	fi

@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/url"
+	"os"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -17,19 +20,41 @@ type Item struct {
 	details string
 }
 
+type Config struct {
+	BaseUrl  string
+	Username string
+	Password string
+	Client   HttpClientInterface
+}
+
+var config = Config{
+	BaseUrl:  os.Getenv("BASE_URL"),
+	Username: os.Getenv("USERNAME"),
+	Password: os.Getenv("PASSWORD"),
+	Client:   &http.Client{},
+}
+
+type HttpClientInterface interface {
+	PostForm(url string, data url.Values) (resp *http.Response, err error)
+}
+
 func Handler() {
-	dat := mustReadWebsiteData()
-	items, err := parseItemsFromHtml(dat)
+	dat := config.MustReadWebsiteData()
+	items, err := config.ParseItemsFromHtml(dat)
 	if err != nil {
 		log.WithError(err).Error("Failed to parse html")
 	}
 
-	for _, i := range items {
-		fmt.Printf("%v\n", i)
+	for k, v := range items {
+		persist(k, v)
 	}
 }
 
-func parseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
+func persist(key string, item Item) {
+	log.Warnf("%s: %v\n", key, item)
+}
+
+func (c *Config) ParseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(htmlData))
 	if err != nil {
 		log.WithError(err).Error("failed to read html data")
@@ -50,8 +75,6 @@ func parseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
 		}
 		id := parts[1]
 		if _, found := items[id]; !found {
-			err := fmt.Errorf("some error")
-			log.WithError(err).Infof("Found new item with id: '%s'", id)
 			items[id] = Item{
 				bibNum:  id,
 				title:   strings.Trim(anchor.Text(), " "),
@@ -62,12 +85,28 @@ func parseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
 	return items, nil
 }
 
-func mustReadWebsiteData() []byte {
+func mustReadTestData() []byte {
 	dat, err := ioutil.ReadFile("./sample.html")
 	if err != nil {
 		log.Fatal(err)
 	}
 	return dat
+}
+
+func (c *Config) MustReadWebsiteData() []byte {
+	resp, err := c.Client.PostForm(
+		fmt.Sprintf("%s/%s", c.BaseUrl, "opac-user.pl"),
+		url.Values{
+			"password": {c.Password},
+			"userid":   {c.Username},
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	return body
 }
 
 func main() {
