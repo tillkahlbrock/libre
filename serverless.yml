@@ -5,6 +5,15 @@ provider:
   name: aws
   runtime: go1.x
   region: eu-central-1
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:PutItem"
+        - "dynamodb:GetItem"
+      Resource:
+        Fn::GetAtt:
+          - DynamoDBTable
+          - Arn
 
 package:
  exclude:
@@ -19,5 +28,23 @@ functions:
       BASE_URL: ${env:BASE_URL}
       USERNAME: ${env:USERNAME}
       PASSWORD: ${env:PASSWORD}
+      DYNAMODB_TABLE:
+        Ref: DynamoDBTable
     events:
       - schedule: rate(2 hours)
+
+resources:
+  Resources:
+    DynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: libre
+        KeySchema:
+          - AttributeName: "id"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: "1"
+          WriteCapacityUnits: "1"
+        AttributeDefinitions:
+          - AttributeName: "id"
+            AttributeType: "S"

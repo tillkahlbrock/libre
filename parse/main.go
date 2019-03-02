@@ -9,8 +9,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+
 	"github.com/PuerkitoBio/goquery"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -21,17 +26,21 @@ type Item struct {
 }
 
 type Config struct {
-	BaseUrl  string
-	Username string
-	Password string
-	Client   HttpClientInterface
+	BaseUrl       string
+	Username      string
+	Password      string
+	Client        HttpClientInterface
+	DynamoDBTable string
+	DBClient      dynamodbiface.DynamoDBAPI
 }
 
 var config = Config{
-	BaseUrl:  os.Getenv("BASE_URL"),
-	Username: os.Getenv("USERNAME"),
-	Password: os.Getenv("PASSWORD"),
-	Client:   &http.Client{},
+	BaseUrl:       os.Getenv("BASE_URL"),
+	Username:      os.Getenv("USERNAME"),
+	Password:      os.Getenv("PASSWORD"),
+	DynamoDBTable: os.Getenv("DYNAMO_DB_TABLE"),
+	Client:        &http.Client{},
+	DBClient:      dynamodb.New(session.Must(session.NewSession())),
 }
 
 type HttpClientInterface interface {
@@ -46,11 +55,20 @@ func Handler() {
 	}
 
 	for k, v := range items {
-		persist(k, v)
+		persist(k, v, config.DBClient)
 	}
 }
 
-func persist(key string, item Item) {
+func persist(key string, item Item, dbClient dynamodbiface.DynamoDBAPI) {
+	_, err := dbClient.PutItem(&dynamodb.PutItemInput{
+		TableName: aws.String(config.DynamoDBTable),
+		Item: map[string]*dynamodb.AttributeValue{
+			"id":    {S: aws.String(item.bibNum)},
+			"title": {S: aws.String(item.title)},
+		}})
+	if err != nil {
+		log.WithField("error", err).Error("Could not store item")
+	}
 	log.Warnf("%s: %v\n", key, item)
 }
 
