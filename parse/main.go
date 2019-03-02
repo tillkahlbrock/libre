@@ -38,7 +38,7 @@ var config = Config{
 	BaseUrl:       os.Getenv("BASE_URL"),
 	Username:      os.Getenv("USERNAME"),
 	Password:      os.Getenv("PASSWORD"),
-	DynamoDBTable: os.Getenv("DYNAMO_DB_TABLE"),
+	DynamoDBTable: os.Getenv("DYNAMODB_TABLE"),
 	Client:        &http.Client{},
 	DBClient:      dynamodb.New(session.Must(session.NewSession())),
 }
