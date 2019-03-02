@@ -23,6 +23,7 @@ type Item struct {
 	bibNum  string
 	title   string
 	details string
+	dueDate string
 }
 
 type Config struct {
@@ -69,7 +70,7 @@ func persist(key string, item Item, dbClient dynamodbiface.DynamoDBAPI) {
 	if err != nil {
 		log.WithField("error", err).Error("Could not store item")
 	}
-	log.Warnf("%s: %v\n", key, item)
+	log.Infof("%s: %v\n", key, item)
 }
 
 func (c *Config) ParseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
@@ -79,11 +80,11 @@ func (c *Config) ParseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
 		return nil, err
 	}
 	items := map[string]Item{}
-	doc.Find("td.title").Each(func(i int, s *goquery.Selection) {
-		anchor := s.Find("a.title")
+	doc.Find("tr").Each(func(i int, s *goquery.Selection) {
+		titleElement := s.Find("td.title")
+		anchor := titleElement.Find("a.title")
 		href, found := anchor.Attr("href")
 		if !found {
-			log.WithError(err).Errorf("No href attribute found in '%s'", anchor.Text())
 			return
 		}
 		parts := strings.Split(href, "=")
@@ -92,14 +93,26 @@ func (c *Config) ParseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
 			return
 		}
 		id := parts[1]
+		var item Item
 		if _, found := items[id]; !found {
-			items[id] = Item{
+			item = Item{
 				bibNum:  id,
 				title:   strings.Trim(anchor.Text(), " "),
 				details: strings.Trim(s.Find("span.item-details").Text(), " "),
 			}
 		}
+
+		dateElement := s.Find("td.date_due")
+		dateSpan := dateElement.Find("span")
+		dateString, found := dateSpan.Attr("title")
+		if !found {
+			log.Warnf("no title tag found in '%s'", dateSpan.Text())
+		}
+		item.dueDate = dateString
+		items[id] = item
+
 	})
+
 	return items, nil
 }
 
