@@ -64,8 +64,9 @@ func persist(key string, item Item, dbClient dynamodbiface.DynamoDBAPI) {
 	_, err := dbClient.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String(config.DynamoDBTable),
 		Item: map[string]*dynamodb.AttributeValue{
-			"id":    {S: aws.String(item.bibNum)},
-			"title": {S: aws.String(item.title)},
+			"id":       {S: aws.String(item.bibNum)},
+			"title":    {S: aws.String(item.title)},
+			"due_date": {S: aws.String(item.dueDate)},
 		}})
 	if err != nil {
 		log.WithField("error", err).Error("Could not store item")
