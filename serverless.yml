@@ -9,7 +9,7 @@ provider:
     - Effect: "Allow"
       Action:
         - "dynamodb:PutItem"
-        - "dynamodb:GetItem"
+        - "dynamodb:Scan"
       Resource:
         Fn::GetAtt:
           - DynamoDBTable
@@ -28,6 +28,13 @@ functions:
       BASE_URL: ${env:BASE_URL}
       USERNAME: ${env:USERNAME}
       PASSWORD: ${env:PASSWORD}
+      DYNAMODB_TABLE:
+        Ref: DynamoDBTable
+    events:
+      - schedule: rate(2 hours)
+  check:
+    handler: bin/check
+    environment:
       DYNAMODB_TABLE:
         Ref: DynamoDBTable
     events:
