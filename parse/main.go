@@ -22,7 +22,6 @@ import (
 type Item struct {
 	bibNum  string
 	title   string
-	details string
 	dueDate string
 }
 
@@ -97,9 +96,8 @@ func (c *Config) ParseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
 		var item Item
 		if _, found := items[id]; !found {
 			item = Item{
-				bibNum:  id,
-				title:   strings.Trim(anchor.Text(), " "),
-				details: strings.Trim(s.Find("span.item-details").Text(), " "),
+				bibNum: id,
+				title:  strings.Trim(anchor.Text(), " "),
 			}
 		}
 
