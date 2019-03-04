@@ -2,10 +2,6 @@
 
 set -ex
 
-pwd
-echo "--------------------------------------------------"
-env
-
 if [ -z "${IMPORT}" ]; then
   IMPORT="${GITHUB_REPOSITORY}"
 fi
