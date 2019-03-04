@@ -11,5 +11,7 @@ LABEL "maintainer"="Till Kahlbrock <till.kahlbrock@gmail.com>"
 
 RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 
-ENTRYPOINT ["/bin/make"]
+ADD entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["build"]
