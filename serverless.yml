@@ -14,6 +14,11 @@ provider:
         Fn::GetAtt:
           - DynamoDBTable
           - Arn
+    - Effect: "Allow"
+      Action:
+        - "sns:Publish"
+      Resource:
+        Ref: NotificationTopic
 
 package:
  exclude:
@@ -37,6 +42,8 @@ functions:
     environment:
       DYNAMODB_TABLE:
         Ref: DynamoDBTable
+      SNS_TOPIC_ARN:
+        Ref: NotificationTopic
     events:
       - schedule: rate(2 hours)
 
@@ -55,3 +62,10 @@ resources:
         AttributeDefinitions:
           - AttributeName: "id"
             AttributeType: "S"
+    NotificationTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: Libre
+        Subscription:
+          - Endpoint: till.kahlbrock@gmail.com
+            Protocol: email
