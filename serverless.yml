@@ -45,7 +45,8 @@ functions:
       SNS_TOPIC_ARN:
         Ref: NotificationTopic
     events:
-      - schedule: rate(2 hours)
+      - schedule: cron(0 8 * * ? *)
+      - schedule: cron(0 16 * * ? *)
 
 resources:
   Resources:
