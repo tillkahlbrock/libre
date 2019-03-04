@@ -67,6 +67,8 @@
     "private/protocol/xml/xmlutil",
     "service/dynamodb",
     "service/dynamodb/dynamodbiface",
+    "service/sns",
+    "service/sns/snsiface",
     "service/sts",
   ]
   pruneopts = ""
@@ -152,14 +154,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e0426ab6a36329d0293c196f10c6dce15ad74fd1751973d4156ab30438636611"
+  digest = "1:d39075e87eb635fd96a33a40d3f3281a86858de8420ab599880b9cd4f32cd372"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = ""
-  revision = "d455e41777fca6e8a5a79e34a14b8368bc11d9ba"
+  revision = "c2f5717e611cf8e89a852a41081355194d80c943"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -171,6 +173,8 @@
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/dynamodb",
     "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface",
+    "github.com/aws/aws-sdk-go/service/sns",
+    "github.com/aws/aws-sdk-go/service/sns/snsiface",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/mock",
   ]
