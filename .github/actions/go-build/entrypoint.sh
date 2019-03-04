@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 if [ -z "${IMPORT}" ]; then
   IMPORT="${GITHUB_REPOSITORY}"
