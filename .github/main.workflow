@@ -5,13 +5,13 @@ workflow "libre Workflow" {
 
 action "Test" {
   needs = "Build"
-  uses = "actions/action-builder/shell@master"
+  uses = "./.github/actions/go-build"
   runs = "make"
   args = "test"
 }
 
 action "Build" {
-  uses = "actions/action-builder/shell@master"
+  uses = "./.github/actions/go-build"
   runs = "make"
   args = "build"
 }
