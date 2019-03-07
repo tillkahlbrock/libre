@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -42,13 +43,15 @@ func TestHandler(t *testing.T) {
 		t.Fail()
 	}
 
+	_ = os.Setenv("CONFIG", "ewogICJhY2NvdW50cyI6IFsKICAgIHsKICAgICAgIm5hbWUiOiAiYW5uYSIsCiAgICAgICJ1c2VybmFtZSI6ICIzODQ5ODMyODQ5MiIsCiAgICAgICJwYXNzd29yZCI6ICJzdXBlcnNlY3JldCIKICAgIH0sCiAgICB7CiAgICAgICJuYW1lIjogInRvbSIsCiAgICAgICJ1c2VybmFtZSI6ICI3ODUzNDc4NzU4IiwKICAgICAgInBhc3N3b3JkIjogInNlY3JldHN1cGVyIgogICAgfQogIF0KfQo=")
+	parseAccountConfig()
+
 	client := &MockHttpClient{responseBody: dat}
 	baseUrl := "https://something.com"
 	dbClient := &mockDynamoDBClient{}
 	config = Config{
+		Accounts:      config.Accounts,
 		BaseUrl:       baseUrl,
-		Username:      "Someuser",
-		Password:      "Somepassword",
 		Client:        client,
 		DynamoDBTable: "sometable",
 		DBClient:      dbClient,

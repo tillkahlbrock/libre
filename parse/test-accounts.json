@@ -1,0 +1,14 @@
+{
+  "accounts": [
+    {
+      "name": "anna",
+      "username": "38498328492",
+      "password": "supersecret"
+    },
+    {
+      "name": "tom",
+      "username": "7853478758",
+      "password": "secretsuper"
+    }
+  ]
+}

@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -25,7 +27,19 @@ type Item struct {
 	dueDate string
 }
 
+type Accounts struct {
+	Accounts []Account `json:"accounts"`
+}
+
+type Account struct {
+	Name     string `json:"name"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type Config struct {
+	Accounts      []Account
+	AccountName   string
 	BaseUrl       string
 	Username      string
 	Password      string
@@ -48,14 +62,20 @@ type HttpClientInterface interface {
 }
 
 func Handler() {
-	dat := config.MustReadWebsiteData()
-	items, err := config.ParseItemsFromHtml(dat)
-	if err != nil {
-		log.WithError(err).Error("Failed to parse html")
-	}
+	for _, a := range config.Accounts {
+		config.Username = a.Username
+		config.Password = a.Password
+		config.AccountName = a.Name
 
-	for k, v := range items {
-		persist(k, v, config.DBClient)
+		dat := config.MustReadWebsiteData()
+		items, err := config.ParseItemsFromHtml(dat)
+		if err != nil {
+			log.WithError(err).Error("Failed to parse html")
+		}
+
+		for k, v := range items {
+			persist(k, v, config.DBClient)
+		}
 	}
 }
 
@@ -66,6 +86,7 @@ func persist(key string, item Item, dbClient dynamodbiface.DynamoDBAPI) {
 			"id":       {S: aws.String(item.bibNum)},
 			"title":    {S: aws.String(item.title)},
 			"due_date": {S: aws.String(item.dueDate)},
+			"account":  {S: aws.String(config.AccountName)},
 		}})
 	if err != nil {
 		log.WithField("error", err).Error("Could not store item")
@@ -132,5 +153,21 @@ func (c *Config) MustReadWebsiteData() []byte {
 }
 
 func main() {
+	parseAccountConfig()
 	lambda.Start(Handler)
+}
+
+func parseAccountConfig() {
+	configJson := os.Getenv("CONFIG")
+	data, err := base64.StdEncoding.DecodeString(configJson)
+	if err != nil {
+		log.WithField("error", err).Fatal("failed to decode config json")
+	}
+
+	var a Accounts
+	err = json.Unmarshal(data, &a)
+	if err != nil {
+		log.WithField("error", err).Fatal("failed to parse config json")
+	}
+	config.Accounts = a.Accounts
 }
