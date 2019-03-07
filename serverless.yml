@@ -33,6 +33,7 @@ functions:
       BASE_URL: ${env:BASE_URL}
       USERNAME: ${env:USERNAME}
       PASSWORD: ${env:PASSWORD}
+      CONFIG: ${env:CONFIG}
       DYNAMODB_TABLE:
         Ref: DynamoDBTable
     events:

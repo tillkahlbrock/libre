@@ -9,10 +9,9 @@ clean:
 	rm -rf ./bin ./vendor Gopkg.lock
 
 test:
-	$(eval CONFIG = $(cat accounts.json | base64 -w0))
 	go test ./...
 
-deploy: guard-USERNAME guard-PASSWORD guard-BASE_URL clean build test
+deploy: guard-USERNAME guard-PASSWORD guard-BASE_URL guard-CONFIG clean build test
 	sls deploy --verbose
 
 guard-%:
