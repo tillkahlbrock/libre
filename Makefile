@@ -11,7 +11,7 @@ clean:
 test:
 	go test ./...
 
-deploy: guard-USERNAME guard-PASSWORD guard-BASE_URL guard-CONFIG clean build test
+deploy: guard-BASE_URL guard-CONFIG clean build test
 	sls deploy --verbose
 
 guard-%:

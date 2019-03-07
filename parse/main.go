@@ -50,8 +50,6 @@ type Config struct {
 
 var config = Config{
 	BaseUrl:       os.Getenv("BASE_URL"),
-	Username:      os.Getenv("USERNAME"),
-	Password:      os.Getenv("PASSWORD"),
 	DynamoDBTable: os.Getenv("DYNAMODB_TABLE"),
 	Client:        &http.Client{},
 	DBClient:      dynamodb.New(session.Must(session.NewSession())),
