@@ -31,7 +31,7 @@
   version = "v1.9.0"
 
 [[projects]]
-  digest = "1:2f245539121de543cc8a58318712d83da09bb559f61921c1df6c598f07ceff30"
+  digest = "1:fe878e5d313cc42e319d35a6548a197f58ed21d443f40fa0c37316af7447a722"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -72,8 +72,8 @@
     "service/sts",
   ]
   pruneopts = ""
-  revision = "6ff66bb2b8ac90ac25b1dbbf9806f09651630789"
-  version = "v1.17.12"
+  revision = "774132714af4336cfacbde2528d8702d0649f225"
+  version = "v1.17.13"
 
 [[projects]]
   digest = "1:0deddd908b6b4b768cfc272c16ee61e7088a60f7fe2f06c547bd3d8e1f8b8e77"
@@ -154,14 +154,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:acd61a173af5a8fc666328598f3aed921b0947ff2da2eeb548f7ba77e9a0cbd0"
+  digest = "1:b723a8ef66371461da4327c018f8b7a879fc59e525f6ac4b03a9f6411a7155ff"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = ""
-  revision = "b294cbcfc56d2a65a30c02c78722b5df061e99b8"
+  revision = "584f3b12f43e1e55248c90e84804777009eed0a4"
 
 [solve-meta]
   analyzer-name = "dep"
