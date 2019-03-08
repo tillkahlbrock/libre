@@ -84,9 +84,9 @@ func (c *Config) fetchItems() {
 
 	}
 
-	if len(sorted.Warn)+len(sorted.Crit) > 0 {
-		sendMail(sorted, c.SNSClient, c.SNSTopicArn)
-	}
+	//if len(sorted.Warn)+len(sorted.Crit) > 0 {
+	sendMail(sorted, c.SNSClient, c.SNSTopicArn)
+	//}
 }
 
 func sendMail(sorted Sorted, snsClient snsiface.SNSAPI, snsTopicArn string) {
