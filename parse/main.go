@@ -71,6 +71,24 @@ func Handler() {
 			log.WithError(err).Error("Failed to parse html")
 		}
 
+		output, err := config.DBClient.Scan(&dynamodb.ScanInput{TableName: aws.String(config.DynamoDBTable)})
+		if err != nil {
+			log.WithField("error", err).Fatalf("Failed to scan table '%s'", config.DynamoDBTable)
+		}
+
+		for _, i := range output.Items {
+			id := *i["id"].S
+
+			if _, hasItem := items[id]; !hasItem {
+				key := map[string]*dynamodb.AttributeValue{"id": {S: aws.String(id)}}
+				_, err := config.DBClient.DeleteItem(&dynamodb.DeleteItemInput{TableName: aws.String(config.DynamoDBTable), Key: key})
+				if err != nil {
+					log.WithError(err).Warnf("failed to delete item with key '%s'", id)
+				}
+			}
+
+		}
+
 		for k, v := range items {
 			persist(k, v, config.DBClient)
 		}

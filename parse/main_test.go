@@ -37,6 +37,15 @@ func (m *mockDynamoDBClient) PutItem(input *dynamodb.PutItemInput) (*dynamodb.Pu
 	return args.Get(0).(*dynamodb.PutItemOutput), args.Error(1)
 }
 
+func (m *mockDynamoDBClient) Scan(*dynamodb.ScanInput) (*dynamodb.ScanOutput, error) {
+	output := &dynamodb.ScanOutput{}
+	return output, nil
+}
+
+func (m *mockDynamoDBClient) DeleteItem(*dynamodb.DeleteItemInput) (*dynamodb.DeleteItemOutput, error) {
+	return nil, nil
+}
+
 func TestHandler(t *testing.T) {
 	dat, err := ioutil.ReadFile("sample.html")
 	if err != nil {

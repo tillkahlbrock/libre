@@ -10,6 +10,7 @@ provider:
       Action:
         - "dynamodb:PutItem"
         - "dynamodb:Scan"
+        - "dynamodb:DeleteItem"
       Resource:
         Fn::GetAtt:
           - DynamoDBTable
