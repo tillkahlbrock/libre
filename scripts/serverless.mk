@@ -1,10 +1,12 @@
-PREFIX ?= example
-PROJECT := url-shortener
+PREFIX ?= sls
+PROJECT := libre
+NOTIFICATION_EMAIL ?= till.kahlbrock@gmail.com
+BASE_URL ?= https://sb-geesch.lmscloud.net/cgi-bin/koha/opac-user.pl
 
 AWS_BUCKET_NAME := $(PREFIX)-$(PROJECT)-artifacts
 AWS_STACK_NAME := $(PREFIX)-$(PROJECT)-stack
-AWS_REGION ?= eu-west-1
-AWS_PROFILE ?= default 
+AWS_REGION ?= eu-central-1
+AWS_PROFILE ?= default
 
 FILE_TEMPLATE = ./template.yml
 FILE_PACKAGE = ./dist/stack.yml
@@ -32,7 +34,9 @@ deploy:
 		--force-upload \
 		--parameter-overrides \
 			PREFIX=$(PREFIX) \
-			PROJECT=$(PROJECT)
+			PROJECT=$(PROJECT) \
+			NotificationEmail=$(NOTIFICATION_EMAIL) \
+			BaseURL=$(BASE_URL)
 
 destroy:
 	@ aws --profile $(AWS_PROFILE) cloudformation delete-stack \

@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -11,10 +9,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
+
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -60,13 +60,20 @@ type HttpClientInterface interface {
 }
 
 func Handler() {
-	for _, a := range config.Accounts {
-		config.Username = a.Username
-		config.Password = a.Password
-		config.AccountName = a.Name
+	accountNames := strings.Split(os.Getenv("ACCOUNT_NAMES"), ",")
+	var accounts []*Account
 
-		dat := config.MustReadWebsiteData()
-		items, err := config.ParseItemsFromHtml(dat)
+	for _, accountName := range accountNames {
+		account, e := fetchAccount(accountName)
+		if e != nil {
+			log.WithError(e).Fatal("failed to fetch account '%s'", accountName)
+		}
+		accounts = append(accounts, account)
+	}
+
+	for _, a := range accounts {
+		dat := config.mustReadWebsiteData(a.Username, a.Password)
+		items, err := config.parseItemsFromHtml(dat)
 		if err != nil {
 			log.WithError(err).Error("Failed to parse html")
 		}
@@ -90,19 +97,59 @@ func Handler() {
 		}
 
 		for k, v := range items {
-			persist(k, v, config.DBClient)
+			config.persist(k, a.Name, v)
 		}
 	}
 }
 
-func persist(key string, item Item, dbClient dynamodbiface.DynamoDBAPI) {
-	_, err := dbClient.PutItem(&dynamodb.PutItemInput{
+func fetchAccount(accountName string) (*Account, error) {
+	usernameId := "/libre/prod/accounts/" + accountName + "/username"
+	passwordId := "/libre/prod/accounts/" + accountName + "/password"
+
+	svc := secretsmanager.New(session.Must(session.NewSession()))
+
+	username, err := getSecret(usernameId, svc)
+	if err != nil {
+		log.WithError(err).Errorf("failed to get username with id '%s'", usernameId)
+		return nil, err
+	}
+	password, err := getSecret(passwordId, svc)
+	if err != nil {
+		log.WithError(err).Errorf("failed to get password with id '%s'", passwordId)
+		return nil, err
+	}
+
+	return &Account{
+		Name:     accountName,
+		Username: username,
+		Password: password,
+	}, nil
+}
+
+func getSecret(secretName string, svc *secretsmanager.SecretsManager) (string, error) {
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId: aws.String(secretName),
+	}
+	result, err := svc.GetSecretValue(input)
+	if err != nil {
+		log.WithError(err).Errorf("failed to get secret value with id '%s'", secretName)
+		return "", err
+	}
+
+	if result.SecretString == nil {
+		return "", fmt.Errorf("secret '%s' had no secret string", secretName)
+	}
+	return *result.SecretString, nil
+}
+
+func (c *Config) persist(key, accountName string, item Item) {
+	_, err := c.DBClient.PutItem(&dynamodb.PutItemInput{
 		TableName: aws.String(config.DynamoDBTable),
 		Item: map[string]*dynamodb.AttributeValue{
 			"id":       {S: aws.String(item.bibNum)},
 			"title":    {S: aws.String(item.title)},
 			"due_date": {S: aws.String(item.dueDate)},
-			"account":  {S: aws.String(config.AccountName)},
+			"account":  {S: aws.String(accountName)},
 		}})
 	if err != nil {
 		log.WithField("error", err).Error("Could not store item")
@@ -110,7 +157,7 @@ func persist(key string, item Item, dbClient dynamodbiface.DynamoDBAPI) {
 	log.Infof("%s: %v\n", key, item)
 }
 
-func (c *Config) ParseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
+func (c *Config) parseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(htmlData))
 	if err != nil {
 		log.WithError(err).Error("failed to read html data")
@@ -152,12 +199,12 @@ func (c *Config) ParseItemsFromHtml(htmlData []byte) (map[string]Item, error) {
 	return items, nil
 }
 
-func (c *Config) MustReadWebsiteData() []byte {
+func (c *Config) mustReadWebsiteData(username, password string) []byte {
 	resp, err := c.Client.PostForm(
 		fmt.Sprintf("%s/%s", c.BaseUrl, "opac-user.pl"),
 		url.Values{
-			"password": {c.Password},
-			"userid":   {c.Username},
+			"userid":   {username},
+			"password": {password},
 		},
 	)
 	if err != nil {
@@ -169,21 +216,5 @@ func (c *Config) MustReadWebsiteData() []byte {
 }
 
 func main() {
-	parseAccountConfig()
 	lambda.Start(Handler)
-}
-
-func parseAccountConfig() {
-	configJson := os.Getenv("CONFIG")
-	data, err := base64.StdEncoding.DecodeString(configJson)
-	if err != nil {
-		log.WithField("error", err).Fatal("failed to decode config json")
-	}
-
-	var a Accounts
-	err = json.Unmarshal(data, &a)
-	if err != nil {
-		log.WithField("error", err).Fatal("failed to parse config json")
-	}
-	config.Accounts = a.Accounts
 }

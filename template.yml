@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  NotificationEmail:
+    Type: String
+  PREFIX:
+    Type: String
+  PROJECT:
+    Type: String
+  BaseURL:
+    Type: String
+
+Resources:
+
+  CheckWebsitePeriodically:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: dist/handler/parse
+      Runtime: go1.x
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MediaTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Join [ "", [ "arn:aws:secretsmanager:eu-central-1:", !Ref 'AWS::AccountId', ":secret:/libre/*" ] ]
+      Environment:
+        Variables:
+          ACCOUNT_NAMES: freya,till
+          BASE_URL: !Ref BaseURL
+          DYNAMODB_TABLE: !Ref MediaTable
+
+  MediaTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Join [ -, [ !Ref PREFIX, !Ref PROJECT, media ] ]
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+
+Outputs:
+  PREFIX:
+    Value: !Ref PREFIX
+  PROJECT:
+    Value: !Ref PROJECT
