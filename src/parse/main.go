@@ -66,7 +66,7 @@ func Handler() {
 	for _, accountName := range accountNames {
 		account, e := fetchAccount(accountName)
 		if e != nil {
-			log.WithError(e).Fatal("failed to fetch account '%s'", accountName)
+			log.WithError(e).Fatalf("failed to fetch account '%s'", accountName)
 		}
 		accounts = append(accounts, account)
 	}
