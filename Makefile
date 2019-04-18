@@ -1,21 +1,19 @@
-.PHONY: build clean deploy
+include scripts/serverless.mk
 
-build:
-	dep ensure -v
-	env GOOS=linux go build -ldflags="-s -w" -o bin/parse parse/main.go
-	env GOOS=linux go build -ldflags="-s -w" -o bin/check check/main.go
+PATH_FUNCTIONS := ./src/
+LIST_FUNCTIONS := $(subst $(PATH_FUNCTIONS),,$(wildcard $(PATH_FUNCTIONS)*))
 
 clean:
-	rm -rf ./bin ./vendor Gopkg.lock
+	@ rm -rf ./dist
 
+test: export GO111MODULE=on
 test:
-	go test ./...
+	@ go test ./...
 
-deploy: guard-BASE_URL guard-CONFIG clean build test
-	sls deploy --verbose
+build-%: export GO111MODULE=on
+build-%:
+	@ GOOS=linux GOARCH=amd64 go build -o ./dist/handler/$* ./src/$*
 
-guard-%:
-	@ if [ "${${*}}" = "" ]; then \
-		echo "Environment variable $* not set"; \
-		exit 1; \
-	fi
+build: clean
+build:
+	@ make $(foreach FUNCTION,$(LIST_FUNCTIONS),build-$(FUNCTION))
