@@ -84,8 +84,11 @@ func Handler() {
 		}
 
 		for _, i := range output.Items {
-			id := *i["id"].S
+			if *i["account"].S != a.Name {
+				continue
+			}
 
+			id := *i["id"].S
 			if _, hasItem := items[id]; !hasItem {
 				key := map[string]*dynamodb.AttributeValue{"id": {S: aws.String(id)}}
 				_, err := config.DBClient.DeleteItem(&dynamodb.DeleteItemInput{TableName: aws.String(config.DynamoDBTable), Key: key})
